@@ -2,7 +2,7 @@
 
 This is a high-performance FastAPI application that acts as an AI-powered agent for extracting, synthesizing, and interpreting key business insights from any website homepage.
 
-**Deployed URL**: [To be added after deployment]
+**Deployed URL**: [https://fastapi-web-agent.onrender.com]
 
 ## Architecture Diagram
 
