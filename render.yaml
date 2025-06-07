@@ -1,0 +1,28 @@
+services:
+  # The FastAPI Web Service
+  - type: web
+    name: ai-web-agent
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn agent_server:app --host 0.0.0.0 --port 10000"
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: API_SECRET_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: agent-redis-cache
+          property: connectionString
+  
+  # The Redis instance for rate limiting and caching
+  - type: redis
+    name: agent-redis-cache
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
