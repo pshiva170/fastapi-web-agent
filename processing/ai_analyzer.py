@@ -1,31 +1,29 @@
 import os
 import json
+import ollama
+from groq import Groq
 from typing import List, Dict, Optional
 
 # --- Configuration ---
-# This now correctly decides which libraries to even try to import and use.
+# Set USE_GROQ to True for deployment, False for local Ollama development.
+# This is determined by the presence of the GROQ_API_KEY environment variable.
 USE_GROQ = os.getenv("GROQ_API_KEY") is not None and len(os.getenv("GROQ_API_KEY")) > 0
 
-# Conditionally import and configure clients
 if USE_GROQ:
-    from groq import Groq
     groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     LLM_MODEL = "llama3-8b-8192"
     print("AI Analyzer configured to use Groq Cloud API.")
-    ollama_client = None # Ensure ollama_client is None
 else:
     try:
-        import ollama
         ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
         ollama_client = ollama.Client(host=ollama_host)
-        ollama_client.list() # Verify connection
+        # Verify connection
+        ollama_client.list()
         LLM_MODEL = "llama3:8b"
         print(f"AI Analyzer configured to use local Ollama at {ollama_host}.")
-        groq_client = None # Ensure groq_client is None
     except Exception as e:
         print(f"FATAL: Could not connect to Ollama at {ollama_host}. Please ensure Ollama is running. Error: {e}")
         ollama_client = None
-        groq_client = None
 
 
 # --- Prompt Engineering ---
@@ -51,7 +49,7 @@ If information for a field is not available in the provided text, use "N/A" for 
 
 def _generate_llm_response(messages: List[Dict[str, str]]) -> str:
     """Internal function to call the configured LLM."""
-    if USE_GROQ and groq_client:
+    if USE_GROQ:
         response = groq_client.chat.completions.create(
             model=LLM_MODEL,
             messages=messages,
@@ -60,15 +58,17 @@ def _generate_llm_response(messages: List[Dict[str, str]]) -> str:
             response_format={"type": "json_object"} if "json" in messages[0]["content"].lower() else None
         )
         return response.choices[0].message.content
-    elif not USE_GROQ and ollama_client:
+    else:
+        if not ollama_client:
+            raise Exception("Ollama client is not initialized. Is Ollama running?")
+        
+        # Ollama API call
         response = ollama_client.chat(
             model=LLM_MODEL,
             messages=messages,
             format='json' if "json" in messages[0]["content"].lower() else ''
         )
         return response['message']['content']
-    else:
-        raise Exception("No valid LLM client is initialized. Check your environment variables and local AI server.")
 
 
 async def analyze_content_with_llm(content: str, custom_questions: Optional[List[str]]) -> Dict:
