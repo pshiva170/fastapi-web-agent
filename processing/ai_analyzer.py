@@ -1,29 +1,31 @@
 import os
 import json
-import ollama
-from groq import Groq
 from typing import List, Dict, Optional
 
 # --- Configuration ---
-# Set USE_GROQ to True for deployment, False for local Ollama development.
-# This is determined by the presence of the GROQ_API_KEY environment variable.
+# This now correctly decides which libraries to even try to import and use.
 USE_GROQ = os.getenv("GROQ_API_KEY") is not None and len(os.getenv("GROQ_API_KEY")) > 0
 
+# Conditionally import and configure clients
 if USE_GROQ:
+    from groq import Groq
     groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     LLM_MODEL = "llama3-8b-8192"
     print("AI Analyzer configured to use Groq Cloud API.")
+    ollama_client = None # Ensure ollama_client is None
 else:
     try:
+        import ollama
         ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
         ollama_client = ollama.Client(host=ollama_host)
-        # Verify connection
-        ollama_client.list()
+        ollama_client.list() # Verify connection
         LLM_MODEL = "llama3:8b"
         print(f"AI Analyzer configured to use local Ollama at {ollama_host}.")
+        groq_client = None # Ensure groq_client is None
     except Exception as e:
         print(f"FATAL: Could not connect to Ollama at {ollama_host}. Please ensure Ollama is running. Error: {e}")
         ollama_client = None
+        groq_client = None
 
 
 # --- Prompt Engineering ---
@@ -49,7 +51,7 @@ If information for a field is not available in the provided text, use "N/A" for 
 
 def _generate_llm_response(messages: List[Dict[str, str]]) -> str:
     """Internal function to call the configured LLM."""
-    if USE_GROQ:
+    if USE_GROQ and groq_client:
         response = groq_client.chat.completions.create(
             model=LLM_MODEL,
             messages=messages,
@@ -58,24 +60,21 @@ def _generate_llm_response(messages: List[Dict[str, str]]) -> str:
             response_format={"type": "json_object"} if "json" in messages[0]["content"].lower() else None
         )
         return response.choices[0].message.content
-    else:
-        if not ollama_client:
-            raise Exception("Ollama client is not initialized. Is Ollama running?")
-        
-        # Ollama API call
+    elif not USE_GROQ and ollama_client:
         response = ollama_client.chat(
             model=LLM_MODEL,
             messages=messages,
             format='json' if "json" in messages[0]["content"].lower() else ''
         )
         return response['message']['content']
+    else:
+        raise Exception("No valid LLM client is initialized. Check your environment variables and local AI server.")
 
 
 async def analyze_content_with_llm(content: str, custom_questions: Optional[List[str]]) -> Dict:
     """
     Analyzes website content to extract core business details and answer specific questions.
     """
-    # --- Part 1: Core Business Details Extraction ---
     analysis_messages = [
         {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
         {"role": "user", "content": f"Here is the website content:\n\n---\n\n{content}\n\n---\n\nExtract the business information based on your instructions."}
@@ -89,7 +88,6 @@ async def analyze_content_with_llm(content: str, custom_questions: Optional[List
     except Exception as e:
         raise Exception(f"An error occurred during LLM company info analysis: {e}")
 
-    # --- Part 2: Custom Question Answering ---
     extracted_answers = []
     if custom_questions:
         for question in custom_questions:
@@ -111,16 +109,13 @@ async def answer_follow_up_question(content: str, query: str, history: List[Dict
     """
     system_prompt = "You are a conversational AI agent. You are having a conversation about a specific website. Use the provided website content and conversation history to answer the user's latest query. Be helpful, conversational, and base your answers on the provided text. If you don't know the answer, say so."
     
-    # Construct the message history for the LLM
     messages = [{"role": "system", "content": system_prompt}]
     messages.append({"role": "system", "content": f"Website Content Context:\n\n---\n{content}\n---"})
     
-    # Add previous conversation turns
     for turn in history:
         messages.append({"role": "user", "content": turn.get("user_query", "")})
         messages.append({"role": "assistant", "content": turn.get("agent_response", "")})
 
-    # Add the current user query
     messages.append({"role": "user", "content": query})
 
     try:
