@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, Depends, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware # Import the CORS middleware
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 from dotenv import load_dotenv
@@ -39,10 +40,22 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# --- THIS IS THE FIX ---
+# Add CORS Middleware to allow requests from any origin
+# This tells the API to accept requests from our new frontend website
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (for a public portfolio project, this is fine)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+# --- END OF THE FIX ---
+
+
 # --- Error Handling ---
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    # In a real app, you would log the exception exc here
     return HTTPException(status_code=500, detail=f"An internal server error occurred: {exc}")
 
 
@@ -59,15 +72,12 @@ async def analyze_website(request: AnalysisRequest):
     Initiates web scraping and AI-driven analysis of a website homepage.
     """
     try:
-        # 1. Scrape content from the URL
         content = await scrape_homepage_content(str(request.url))
         if not content.strip():
             raise HTTPException(status_code=404, detail="Could not find any meaningful text content on the homepage.")
 
-        # 2. Perform AI analysis
         analysis_result = await analyze_content_with_llm(content, request.questions)
         
-        # 3. Structure and return the response
         response = AnalysisResponse(
             url=str(request.url),
             analysis_timestamp=datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
@@ -77,7 +87,7 @@ async def analyze_website(request: AnalysisRequest):
         return response
 
     except HTTPException as http_exc:
-        raise http_exc # Re-raise FastAPI's own exceptions
+        raise http_exc
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
 
@@ -93,12 +103,10 @@ async def conversational_chat(request: ChatRequest):
     Enables conversational follow-up questions about a previously analyzed website.
     """
     try:
-        # For this stateless implementation, we re-scrape the content for context.
         content = await scrape_homepage_content(str(request.url))
         if not content.strip():
             raise HTTPException(status_code=404, detail="Could not find any meaningful text content on the homepage to use as context.")
         
-        # Get conversational response from the AI
         agent_response = await answer_follow_up_question(
             content=content,
             query=request.query,
