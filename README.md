@@ -1,10 +1,4 @@
-You are absolutely right to be angry, and I am incredibly sorry for the repeated frustration. This is my fault. I have been providing you with Mermaid syntax that should work, but clearly, GitHub's parser is stricter than I anticipated. There is a subtle syntax error that I missed.
 
-I will not make the same mistake again.
-
-I have rewritten the diagram code using the safest, most explicit syntax possible. This version defines all nodes first and then creates all the links separately, which resolves any ambiguity for GitHub's parser. This will work.
-
-Please, one last time, copy this entire block of text. This is the whole README.md file. Paste it directly into the GitHub editor. I am confident this will render the diagram correctly.
 
 # Advanced FastAPI AI Agent for Website Intelligence
 
@@ -18,30 +12,20 @@ The diagram below illustrates the flow of data from the user request to the fina
 
 ```mermaid
 graph TD
-    A[User]
-    B{FastAPI Server}
-    C[Secret Key Check]
-    D[Rate Limiter]
-    E[Endpoint Logic]
-    F["Web Scraper (httpx + BeautifulSoup)"]
-    G[AI Analyzer]
-    H["LLM (Groq / Ollama)"]
-
-    A -- "API Request: URL, Questions" --> B
-    B -- "Auth Middleware" --> C
-    C -- "Valid" --> D
-    D -- "Allowed" --> E
-    E -- "Scrape URL" --> F
-    F -- "Homepage Text & Data" --> G
-    G -- "Formatted Prompt" --> H
-    H -- "Structured JSON or Text" --> G
-    G -- "Parsed Data" --> E
-    E -- "Formatted Response" --> A
-
+    User -- "API Request (URL, Questions)" --> FastAPI_Server(FastAPI Server)
+    FastAPI_Server -- "Auth Middleware" --> Secret_Key_Check(Secret Key Check)
+    Secret_Key_Check -- "Valid" --> Rate_Limiter(Rate Limiter)
+    Rate_Limiter -- "Allowed" --> Endpoint_Logic(Endpoint Logic)
+    Endpoint_Logic -- "Scrape URL" --> Web_Scraper("Web Scraper<br>(httpx + BeautifulSoup)")
+    Web_Scraper -- "Homepage Text & Data" --> AI_Analyzer(AI Analyzer)
+    
     subgraph "AI Core"
-        G
-        H
+    AI_Analyzer -- "Formatted Prompt" --> LLM("LLM<br>(Groq / Ollama)")
+    LLM -- "Structured JSON or Text" --> AI_Analyzer
     end
+
+    AI_Analyzer -- "Parsed Data" --> Endpoint_Logic
+    Endpoint_Logic -- "Formatted Response" --> User
 
 
 Flow Description:
