@@ -3,18 +3,19 @@ Advanced FastAPI AI Agent for Website Intelligence
 
 This project is a high-performance FastAPI application that acts as an AI-powered agent. It extracts, synthesizes, and interprets key business insights from any given website homepage, providing both structured data and a conversational interface for follow-up questions.
 
-Architecture Diagram
+## Architecture Diagram
 
 The diagram below illustrates the flow of data from the user request to the final AI-powered response.
 
+```mermaid
 graph TD
     A[User] -- API Request (URL, Questions) --> B{FastAPI Server};
     B -- Auth Middleware --> C[Secret Key Check];
     C -- Valid --> D[Rate Limiter];
     D -- Allowed --> E[Endpoint Logic];
     E -- Scrape URL --> F["Web Scraper (httpx + BeautifulSoup)"];
-    F -- Homepage Text & Data --> G[AI Analyzer];
-    G -- Formatted Prompt --> H["LLM (Groq / Ollama)"];
+    F -- Homepage Text --> G[AI Analyzer];
+    G -- Formatted Prompt --> H["LLM (Ollama/Groq)"];
     H -- Structured JSON / Text --> G;
     G -- Parsed Data --> E;
     E -- Formatted Response --> A;
@@ -23,6 +24,8 @@ graph TD
         G
         H
     end
+```
+
 
 
 Flow Description:
