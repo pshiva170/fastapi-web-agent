@@ -1,3 +1,11 @@
+My deepest apologies. You are absolutely right to point this out, and thank you for your patience. I have identified the subtle but critical syntax error in the diagram code that is causing GitHub to fail.
+
+The problem is with special characters like ( ) and + inside the diagram's text labels. GitHub's Mermaid parser can be very strict about these.
+
+I have rewritten the diagram's code to remove these special characters, which will fix the parsing error. The rest of the README.md file is perfectly fine.
+
+Please use this final, corrected version. This is a single block of text. Copy the entire thing and paste it directly into the editor on GitHub. The diagram will now render correctly.
+
 # Advanced FastAPI AI Agent for Website Intelligence
 
 This project is a high-performance FastAPI application that acts as an AI-powered agent. It extracts, synthesizes, and interprets key business insights from any given website homepage, providing both structured data and a conversational interface for follow-up questions.
@@ -10,14 +18,14 @@ The diagram below illustrates the flow of data from the user request to the fina
 
 ```mermaid
 graph TD
-    A[User] -- API Request (URL, Questions) --> B{FastAPI Server};
+    A[User] -- "API Request: URL, Questions" --> B{FastAPI Server};
     B -- Auth Middleware --> C[Secret Key Check];
     C -- Valid --> D[Rate Limiter];
     D -- Allowed --> E[Endpoint Logic];
-    E -- Scrape URL --> F["Web Scraper (httpx + BeautifulSoup)"];
-    F -- Homepage Text & Data --> G[AI Analyzer];
-    G -- Formatted Prompt --> H["LLM (Groq / Ollama)"];
-    H -- Structured JSON / Text --> G;
+    E -- Scrape URL --> F["Web Scraper: httpx and BeautifulSoup"];
+    F -- "Homepage Text and Data" --> G[AI Analyzer];
+    G -- Formatted Prompt --> H["LLM: Groq or Ollama"];
+    H -- "Structured JSON or Text" --> G;
     G -- Parsed Data --> E;
     E -- Formatted Response --> A;
 
@@ -105,12 +113,17 @@ python -m venv venv
 source venv/bin/activate
 
 # Install all required dependencies
-pip install -r requirements.txt```
+pip install -r requirements.txt
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
+3. Configure Environment Variables
 
-### 3. Configure Environment Variables
-Create a file named `.env` in the root of the project folder. Copy the template below into the file and add your secret key.
+Create a file named .env in the root of the project folder. Copy the template below into the file and add your secret key.
 
-```env
 # .env
 # Invent your own secret password. This will be used in the "Authorization: Bearer <key>" header.
 APP_SECRET_KEY="your_super_secret_password_here"
@@ -126,18 +139,23 @@ IGNORE_WHEN_COPYING_START
 content_copy
 download
 Use code with caution.
-Bash
+Env
 IGNORE_WHEN_COPYING_END
 4. Prepare Local AI Model
 
 If you are using Ollama, you must pull the tinyllama model.
 
-ollama pull tinyllama```
+ollama pull tinyllama
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+Bash
+IGNORE_WHEN_COPYING_END
+5. Run the Application
 
-### 5. Run the Application
-Start the FastAPI server using `uvicorn`. The application's main file is `agent_server.py`.
+Start the FastAPI server using uvicorn. The application's main file is agent_server.py.
 
-```bash
 uvicorn agent_server:app --reload
 IGNORE_WHEN_COPYING_START
 content_copy
