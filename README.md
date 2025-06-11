@@ -14,9 +14,9 @@ graph TD
     B -- Auth Middleware --> C[Secret Key Check];
     C -- Valid --> D[Rate Limiter];
     D -- Allowed --> E[Endpoint Logic];
-    E -- Scrape URL --> F[Web Scraper (httpx + BeautifulSoup)];
+    E -- Scrape URL --> F["Web Scraper (httpx + BeautifulSoup)"];
     F -- Homepage Text --> G[AI Analyzer];
-    G -- Formatted Prompt --> H[LLM (Ollama/Groq)];
+    G -- Formatted Prompt --> H["LLM (Ollama/Groq)"];
     H -- Structured JSON / Text --> G;
     G -- Parsed Data --> E;
     E -- Formatted Response --> A;
