@@ -1,31 +1,28 @@
 
-
-# Advanced FastAPI AI Agent for Website Intelligence
+Advanced FastAPI AI Agent for Website Intelligence
 
 This project is a high-performance FastAPI application that acts as an AI-powered agent. It extracts, synthesizes, and interprets key business insights from any given website homepage, providing both structured data and a conversational interface for follow-up questions.
 
----
-
-## Architecture Diagram
+Architecture Diagram
 
 The diagram below illustrates the flow of data from the user request to the final AI-powered response.
 
-```mermaid
 graph TD
-    User -- "API Request (URL, Questions)" --> FastAPI_Server(FastAPI Server)
-    FastAPI_Server -- "Auth Middleware" --> Secret_Key_Check(Secret Key Check)
-    Secret_Key_Check -- "Valid" --> Rate_Limiter(Rate Limiter)
-    Rate_Limiter -- "Allowed" --> Endpoint_Logic(Endpoint Logic)
-    Endpoint_Logic -- "Scrape URL" --> Web_Scraper("Web Scraper<br>(httpx + BeautifulSoup)")
-    Web_Scraper -- "Homepage Text & Data" --> AI_Analyzer(AI Analyzer)
-    
-    subgraph "AI Core"
-    AI_Analyzer -- "Formatted Prompt" --> LLM("LLM<br>(Groq / Ollama)")
-    LLM -- "Structured JSON or Text" --> AI_Analyzer
-    end
+    A[User] -- API Request (URL, Questions) --> B{FastAPI Server};
+    B -- Auth Middleware --> C[Secret Key Check];
+    C -- Valid --> D[Rate Limiter];
+    D -- Allowed --> E[Endpoint Logic];
+    E -- Scrape URL --> F["Web Scraper (httpx + BeautifulSoup)"];
+    F -- Homepage Text & Data --> G[AI Analyzer];
+    G -- Formatted Prompt --> H["LLM (Groq / Ollama)"];
+    H -- Structured JSON / Text --> G;
+    G -- Parsed Data --> E;
+    E -- Formatted Response --> A;
 
-    AI_Analyzer -- "Parsed Data" --> Endpoint_Logic
-    Endpoint_Logic -- "Formatted Response" --> User
+    subgraph "AI Core"
+        G
+        H
+    end
 
 
 Flow Description:
@@ -231,9 +228,3 @@ Python (Microsoft): Core Python language support, debugging, and linting.
 Pylance (Microsoft): Provides high-performance type checking and smart code completions.
 
 Thunder Client: An in-editor REST client useful for quickly testing API endpoints without leaving the IDE.
-
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-IGNORE_WHEN_COPYING_END
